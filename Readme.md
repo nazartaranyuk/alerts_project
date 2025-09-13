@@ -1,4 +1,4 @@
-#To build this project create config.yaml file in configs/ directory with following name config.(dev, stage or prod).yaml with following syntax
+To build this project create config.yaml file in configs/ directory with following name config.(dev, stage or prod).yaml with following syntax
 ```yaml
 env: "dev" // could be dev, stage, prod
 

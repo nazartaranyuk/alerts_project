@@ -12,16 +12,13 @@ type AlarmsRepository struct {
 
 func (rep *AlarmsRepository) GetCurrentAlerts() ([]domain.RegionAlarmInfo, error) {
 	response, err := rep.client.GetCurrentAlerts()
-	
 	if err != nil {
-		log.Fatalf("Service cannot get alarms info: %v", err)
+		log.Printf("Service cannot get alarms info: %v", err)
 		return nil, err
 	}
 
 	return response, nil
 }
-
-
 
 func NewAlarmsRepository(client *client.Client) *AlarmsRepository {
 	return &AlarmsRepository{

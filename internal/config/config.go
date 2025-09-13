@@ -10,10 +10,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const (
-	APP_ENV = "APP_ENV"
-)
-
 type ServerConfig struct {
 	Host string `yaml:"host"`
 	Port int    `yaml:"port"`
@@ -31,7 +27,7 @@ type Config struct {
 	Client ClientConfig `yaml:"client"`
 }
 
-func LoadConfig(path string) *Config {
+func LoadConfig() *Config {
 	_ = godotenv.Load()
 
 	env := os.Getenv("APP_ENV")
