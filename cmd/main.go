@@ -2,10 +2,13 @@ package main
 
 import (
 	"fmt"
-	// "log"
-	// "nazartaraniuk/alertsProject/internal/app/client"
+	"nazartaraniuk/alertsProject/internal/app/client"
 	"nazartaraniuk/alertsProject/internal/config"
-	// "time"
+	"nazartaraniuk/alertsProject/internal/repository"
+	"nazartaraniuk/alertsProject/internal/service"
+	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const(
@@ -16,14 +19,17 @@ func main() {
 	cfg := config.LoadConfig(CONFIG_PATH)
 	fmt.Println(cfg.Client.APIBaseURL)
 
-	// client, err := client.NewClient(
-	// 	cfg.Client.APIBaseURL,
-	// 	time.Second,
-	// 	cfg.Client.APIKey,
-	// )
+	client := client.NewClient(
+		cfg.Client.APIBaseURL,
+		time.Second,
+		cfg.Client.APIKey,
+	)
+	
+	repository := repository.NewAlarmsRepository(client)
+	service := usecase.NewGetAlarmInfoService(*repository)
 
+	response, _ := service.GetCurrentAlerts()
+	log.SetFormatter(&log.JSONFormatter{})
+	log.Info(response)
 
-	// if err != nil {
-	// 	log.Fatalf("Some error with creating Client, %v", err)
-	// }
 }
