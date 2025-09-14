@@ -15,10 +15,18 @@ func (rep *AlarmsRepository) GetCurrentAlerts() ([]domain.RegionAlarmInfo, error
 	response, err := rep.client.GetCurrentAlerts()
 	if err != nil {
 		logrus.Printf("Service cannot get alarms info: %v", err)
-		return nil, err
 	}
 
-	return response, nil
+	return response, err
+}
+
+func (rep *AlarmsRepository) GetAlarmInfoByRegion(regionID string) (domain.RegionAlarmInfo, error) {
+	response, err := rep.client.GetAlarmInfoByRegion(regionID)
+	if err != nil {
+		logrus.Printf("Service cannot get alarm info by region: %v", err)
+	}
+
+	return response, err
 }
 
 func NewAlarmsRepository(client *client.Client) *AlarmsRepository {

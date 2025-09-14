@@ -13,6 +13,10 @@ func (s *GetAlarmInfoService) GetCurrentAlerts() ([]domain.RegionAlarmInfo, erro
 	return s.alarmRepository.GetCurrentAlerts()
 }
 
+func (s *GetAlarmInfoService) GetAlarmInfoByRegion(regionID string) (domain.RegionAlarmInfo, error) {
+	return s.alarmRepository.GetAlarmInfoByRegion(regionID)
+}
+
 func NewGetAlarmInfoService(repository repository.AlarmsRepository) *GetAlarmInfoService {
 	return &GetAlarmInfoService{
 		alarmRepository: repository,

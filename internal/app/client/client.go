@@ -31,6 +31,28 @@ func NewClient(rawURL string, timeout time.Duration, apiKey string) *Client {
 	}
 }
 
+func (c *Client) GetAlarmInfoByRegion(regionID string) (domain.RegionAlarmInfo, error) {
+	resp, err := c.HTTP.Get(c.BaseURL + "/alerts/" + regionID)
+	if err != nil {
+		logrus.Fatalf("Cannot send GET: %v", err)
+	}
+
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		logrus.Fatalf("Cannot read body: %v", err)
+	}
+
+	var response domain.RegionAlarmInfo
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		logrus.Printf("Cannot unmarshal response due to error: %v", err)
+	}
+
+	return response, nil
+}
+
 func (c *Client) GetCurrentAlerts() ([]domain.RegionAlarmInfo, error) {
 	resp, err := c.HTTP.Get(c.BaseURL + "/alerts")
 	if err != nil {
