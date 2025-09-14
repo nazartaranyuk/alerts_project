@@ -12,6 +12,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// @title Alerts Project API
+// @version 2.0
+// @description API for getting alarms
+// @host localhost:8080
+// @BasePath /
 func main() {
 	cfg := config.LoadConfig()
 	fmt.Println(cfg.Client.APIBaseURL)

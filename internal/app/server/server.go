@@ -11,6 +11,8 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 type Server struct {
@@ -22,6 +24,8 @@ func NewServer(cfg *config.Config, s usecase.GetAlarmInfoService) (*Server, erro
 	http.HandleFunc("/health", handler.Health)
 
 	http.HandleFunc("/alerts", handler.GetAlarms(s))
+
+	http.Handle("/swagger/", httpSwagger.WrapHandler)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
