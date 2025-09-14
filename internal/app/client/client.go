@@ -3,10 +3,12 @@ package client
 import (
 	"encoding/json"
 	"io"
-	"log"
+	"nazartaraniuk/alertsProject/internal/app/client/trippers"
 	"nazartaraniuk/alertsProject/internal/domain"
 	"net/http"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Client struct {
@@ -15,53 +17,39 @@ type Client struct {
 	APIKey  string
 }
 
-func (c *Client) SetAuthorization() {
-}
-
-func (c *Client) GetCurrentAlerts() ([]domain.RegionAlarmInfo, error) {
-	resp, err := c.HTTP.Get(c.BaseURL + "/alerts")
-	if err != nil {
-		log.Fatalf("Cannot send GET due to error: %v", err)
-	}
-
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatalf("Cannot read body: %v", err)
-	}
-
-	var response []domain.RegionAlarmInfo
-	err = json.Unmarshal(body, &response)
-	if err != nil {
-		log.Printf("Cannot unmarshal response due to error: %v", err)
-		return nil, err
-	}
-
-	return response, nil
-}
-
-type AuthRoundTripper struct {
-	APIKey string
-	Next   http.RoundTripper
-}
-
-func (art *AuthRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	request := req.Clone(req.Context())
-	request.Header.Add("Authorization", art.APIKey)
-	return art.Next.RoundTrip(request)
-}
-
 func NewClient(rawURL string, timeout time.Duration, apiKey string) *Client {
 	return &Client{
 		BaseURL: rawURL,
 		HTTP: &http.Client{
 			Timeout: timeout,
-			Transport: &AuthRoundTripper{
+			Transport: &trippers.AuthRoundTripper{
 				APIKey: apiKey,
 				Next:   http.DefaultTransport,
 			},
 		},
 		APIKey: apiKey,
 	}
+}
+
+func (c *Client) GetCurrentAlerts() ([]domain.RegionAlarmInfo, error) {
+	resp, err := c.HTTP.Get(c.BaseURL + "/alerts")
+	if err != nil {
+		logrus.Fatalf("Cannot send GET due to error: %v", err)
+	}
+
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		logrus.Fatalf("Cannot read body: %v", err)
+	}
+
+	var response []domain.RegionAlarmInfo
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		logrus.Printf("Cannot unmarshal response due to error: %v", err)
+		return nil, err
+	}
+
+	return response, nil
 }

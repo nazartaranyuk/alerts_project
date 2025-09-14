@@ -2,17 +2,20 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/joho/godotenv"
 	"gopkg.in/yaml.v3"
 )
 
 type ServerConfig struct {
-	Host string `yaml:"host"`
-	Port int    `yaml:"port"`
+	Host          string `yaml:"host"`
+	Port          int    `yaml:"port"`
+	AdminPassword string `yaml:"admin_password"`
+	AdminUsername string `yaml:"admin_username"`
 }
 
 type ClientConfig struct {
@@ -35,11 +38,11 @@ func LoadConfig() *Config {
 	configPath := filepath.Join("configs", fmt.Sprintf("config.%s.yaml", env))
 	data, err := os.ReadFile(configPath)
 	if err != nil {
-		log.Fatalf("Cannot read config file: %s: %v", configPath, err)
+		logrus.Fatalf("Cannot read config file: %s: %v", configPath, err)
 	}
 	var cfg Config
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		log.Fatalf("cannot parse config: %v", err)
+		logrus.Fatalf("cannot parse config: %v", err)
 	}
 
 	return &cfg

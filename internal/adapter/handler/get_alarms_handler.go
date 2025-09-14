@@ -6,6 +6,12 @@ import (
 	"nazartaraniuk/alertsProject/internal/usecase"
 	"net/http"
 	"time"
+
+	"github.com/labstack/echo/v4"
+)
+
+const (
+	ServerErrorMessage = "Server error, api might have limit, try again after 1 minute"
 )
 
 // GetAlarms godoc
@@ -16,19 +22,19 @@ import (
 // @Success 200 {array} domain.RegionAlarmInfo
 // @Failure 500 {object} domain.Error
 // @Router /alerts [get]
-func GetAlarms(serv usecase.GetAlarmInfoService) http.HandlerFunc {
-	return func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+func GetAlarms(serv usecase.GetAlarmInfoService) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		c.Request().Header.Set("Content-Type", "application/json; charset=utf-8")
 
 		response, err := serv.GetCurrentAlerts()
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			_ = json.NewEncoder(w).Encode(
-				domain.NewError("Server error, api might have limit, try again after 1 minute", time.Now()),
+			c.Response().WriteHeader(http.StatusInternalServerError)
+			_ = json.NewEncoder(c.Response().Writer).Encode(
+				domain.NewError(ServerErrorMessage, time.Now()),
 			)
-			return
 		}
 
-		_ = json.NewEncoder(w).Encode(response)
+		_ = json.NewEncoder(c.Response().Writer).Encode(response)
+		return err
 	}
 }

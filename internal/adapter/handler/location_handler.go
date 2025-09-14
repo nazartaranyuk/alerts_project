@@ -1,10 +1,12 @@
 package handler
 
 import (
-	"log"
 	"nazartaraniuk/alertsProject/internal/adapter/ws"
 	"net/http"
 	"time"
+
+	"github.com/labstack/echo/v4"
+	"github.com/sirupsen/logrus"
 
 	"github.com/gorilla/websocket"
 )
@@ -24,34 +26,35 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(_ *http.Request) bool { return true },
 }
 
-func Handler(h *ws.Hub) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		userID := r.URL.Query().Get("user_id")
+func Handler(h *ws.Hub) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		userID := c.Request().URL.Query().Get("user_id")
 		if userID == "" {
-			http.Error(w, "user_id required", http.StatusBadRequest)
-			return
+			http.Error(c.Response(), "user_id required", http.StatusBadRequest)
+			return nil
 		}
-		wb, err := upgrader.Upgrade(w, r, nil)
+		wb, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 		if err != nil {
-			return
+			logrus.Println(err)
+			return nil
 		}
-		c := ws.NewConn(wb)
-		h.Join(userID, c)
-		go c.WriteLoop()
+		conn := ws.NewConn(wb)
+		h.Join(userID, conn)
+		go conn.WriteLoop()
 		defer func() {
-			h.Leave(userID, c)
-			c.Close()
+			h.Leave(userID, conn)
+			conn.Close()
 		}()
 		for {
 			var m message
-			if err := c.ReadJSON(&m); err != nil {
-				return
+			if err := conn.ReadJSON(&m); err != nil {
+				return nil
 			}
 			if m.TS == "" {
 				m.TS = time.Now().UTC().Format(time.RFC3339)
 			}
 			if m.Type == "loc" && m.UserID == userID {
-				log.Printf("[WS] user %s -> lat=%.6f lon=%.6f accuracy=%.1f ts=%s",
+				logrus.Printf("[WS] user %s -> lat=%.6f lon=%.6f accuracy=%.1f ts=%s",
 					m.UserID, m.Lat, m.Lon, m.Accuracy, m.TS)
 				h.Broadcast(userID, ws.Payload{
 					UserID:   m.UserID,

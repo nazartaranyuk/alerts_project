@@ -2,8 +2,9 @@ package ws
 
 import (
 	"encoding/json"
-	"log"
 	"time"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/gorilla/websocket"
 )
@@ -21,7 +22,7 @@ func (c *Conn) ReadJSON(v any) error {
 	c.ws.SetReadLimit(1 << 16)
 	err := c.ws.SetReadDeadline(time.Now().Add(60 * time.Second))
 	if err != nil {
-		log.Printf("Cannot set connection deadline: %v", err)
+		logrus.Printf("Cannot set connection deadline: %v", err)
 	}
 	c.ws.SetPongHandler(func(string) error {
 		err := c.ws.SetReadDeadline(time.Now().Add(60 * time.Second))
