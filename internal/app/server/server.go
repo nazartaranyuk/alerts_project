@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"nazartaraniuk/alertsProject/internal/adapter/handler"
+	"nazartaraniuk/alertsProject/internal/adapter/ws"
 	"nazartaraniuk/alertsProject/internal/config"
 	"nazartaraniuk/alertsProject/internal/usecase"
 	"net/http"
@@ -23,9 +24,12 @@ type Server struct {
 func NewServer(cfg *config.Config, s usecase.GetAlarmInfoService) (*Server, error) {
 	http.HandleFunc("/health", handler.Health)
 
+	hub := ws.NewHub()
+	http.HandleFunc("/location", handler.Handler(hub))
+
 	http.HandleFunc("/alerts", handler.GetAlarms(s))
 
-	http.Handle("/swagger/", httpSwagger.WrapHandler)
+	http.Handle("/swagger", httpSwagger.WrapHandler)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
