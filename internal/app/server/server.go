@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"nazartaraniuk/alertsProject/internal/adapter/handler"
+	"nazartaraniuk/alertsProject/internal/adapter/midl"
+	"nazartaraniuk/alertsProject/internal/adapter/ws"
 	"nazartaraniuk/alertsProject/internal/config"
 	"nazartaraniuk/alertsProject/internal/usecase"
 	"net/http"
@@ -12,37 +14,40 @@ import (
 	"syscall"
 	"time"
 
-	httpSwagger "github.com/swaggo/http-swagger"
+	"github.com/labstack/echo/v4"
+	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
 type Server struct {
 	cfg    *config.Config
-	server *http.Server
+	server *echo.Echo
 }
 
 func NewServer(cfg *config.Config, s usecase.GetAlarmInfoService) (*Server, error) {
-	http.HandleFunc("/health", handler.Health)
+	hub := ws.NewHub()
+	server := echo.New()
 
-	http.HandleFunc("/alerts", handler.GetAlarms(s))
+	server.GET("/health", handler.Health())
 
-	http.Handle("/swagger/", httpSwagger.WrapHandler)
+	server.GET("/location", handler.Handler(hub))
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.NotFound(w, r)
+	server.GET("/alerts", handler.GetAlarms(s))
+
+	server.GET("/swagger", echoSwagger.WrapHandler)
+
+	midl.AddTestAuthMiddleWare(server, cfg.Server.AdminUsername, cfg.Server.AdminPassword)
+
+	server.GET("/", func(c echo.Context) error {
+		return c.String(http.StatusNotFound, "Not found")
 	})
-
-	server := &http.Server{
-		Addr:              fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port),
-		Handler:           http.DefaultServeMux,
-		ReadHeaderTimeout: 5 * time.Second,
-	}
 
 	return &Server{cfg: cfg, server: server}, nil
 }
 
 func (a *Server) Run() error {
 	errCh := make(chan error, 1)
-	go func() { errCh <- a.server.ListenAndServe() }()
+	port := fmt.Sprintf(":%d", a.cfg.Server.Port)
+	go func() { errCh <- a.server.Start(port) }()
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)

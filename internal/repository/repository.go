@@ -1,9 +1,10 @@
 package repository
 
 import (
-	"log"
 	"nazartaraniuk/alertsProject/internal/app/client"
 	"nazartaraniuk/alertsProject/internal/domain"
+
+	"github.com/sirupsen/logrus"
 )
 
 type AlarmsRepository struct {
@@ -13,7 +14,7 @@ type AlarmsRepository struct {
 func (rep *AlarmsRepository) GetCurrentAlerts() ([]domain.RegionAlarmInfo, error) {
 	response, err := rep.client.GetCurrentAlerts()
 	if err != nil {
-		log.Printf("Service cannot get alarms info: %v", err)
+		logrus.Printf("Service cannot get alarms info: %v", err)
 		return nil, err
 	}
 

@@ -9,7 +9,7 @@ import (
 	"nazartaraniuk/alertsProject/internal/usecase"
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 // @title Alerts Project API
@@ -32,7 +32,7 @@ func main() {
 
 	mainServer, err := server.NewServer(cfg, *service)
 	if err != nil {
-		log.Fatal(err)
+		logrus.Fatal(err)
 	}
 
 	_ = mainServer.Run()

@@ -5,6 +5,8 @@ env: "dev" // could be dev, stage, prod
 server:
   host: "name of your host"
   port: // your port (int type)
+  admin_username: // your admin username
+  admin_password: // your admin password
 
 client:
   api_base_url: "YOUR_API_BASE_URL"
