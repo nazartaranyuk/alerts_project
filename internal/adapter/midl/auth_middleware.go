@@ -1,18 +1,29 @@
 package midl
 
 import (
-	"crypto/subtle"
+	"net/http"
+
+	"github.com/golang-jwt/jwt/v5"
+	echojwt "github.com/labstack/echo-jwt/v4"
 
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 )
 
-func AddTestAuthMiddleWare(server *echo.Echo, testUsername string, testPassword string) {
-	server.Use(middleware.BasicAuth(func(username, password string, _ echo.Context) (bool, error) {
-		if subtle.ConstantTimeCompare([]byte(username), []byte(testUsername)) == 1 &&
-			subtle.ConstantTimeCompare([]byte(password), []byte(testPassword)) == 1 {
-			return true, nil
-		}
-		return false, nil
+func AddJWTMiddleware(server *echo.Echo, jwtSecret []byte) {
+	authorizedGroup := server.Group("/api")
+
+	authorizedGroup.Use(echojwt.WithConfig(echojwt.Config{
+		SigningKey:  jwtSecret,
+		TokenLookup: "header:Authorization",
+
+		NewClaimsFunc: func(_ echo.Context) jwt.Claims {
+			return jwt.MapClaims{}
+		},
+		ErrorHandler: func(c echo.Context, err error) error {
+			return c.JSON(http.StatusUnauthorized, map[string]string{
+				"error":   "unauthorized",
+				"message": err.Error(),
+			})
+		},
 	}))
 }

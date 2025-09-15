@@ -30,7 +30,7 @@ func main() {
 	alarmsRepository := repository.NewAlarmsRepository(mainClient)
 	service := usecase.NewGetAlarmInfoService(*alarmsRepository)
 
-	mainServer, err := server.NewServer(cfg, *service)
+	mainServer, err := server.NewServer(*cfg, *service)
 	if err != nil {
 		logrus.Fatal(err)
 	}

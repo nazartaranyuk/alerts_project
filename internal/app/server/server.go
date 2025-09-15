@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"nazartaraniuk/alertsProject/internal/adapter/handler"
 	"nazartaraniuk/alertsProject/internal/adapter/midl"
-	"nazartaraniuk/alertsProject/internal/adapter/ws"
 	"nazartaraniuk/alertsProject/internal/config"
 	"nazartaraniuk/alertsProject/internal/usecase"
 	"net/http"
@@ -14,28 +13,31 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/labstack/echo/v4/middleware"
+
 	"github.com/labstack/echo/v4"
 	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
 type Server struct {
-	cfg    *config.Config
+	cfg    config.Config
 	server *echo.Echo
 }
 
-func NewServer(cfg *config.Config, s usecase.GetAlarmInfoService) (*Server, error) {
-	hub := ws.NewHub()
+func NewServer(cfg config.Config, s usecase.GetAlarmInfoService) (*Server, error) {
 	server := echo.New()
+	server.Use(middleware.Recover())
+	server.Use(middleware.Logger())
 
-	server.GET("/health", handler.Health())
+	server.POST("/login", handler.LoginHandler(cfg))
 
-	server.GET("/location", handler.Handler(hub))
+	midl.AddJWTMiddleware(server, []byte(cfg.Server.JWTSecret))
 
-	server.GET("/alerts", handler.GetAlarms(s))
+	server.GET("/api/v1/health", handler.Health())
+
+	server.GET("/api/v1/alerts", handler.GetAlarms(s))
 
 	server.GET("/swagger", echoSwagger.WrapHandler)
-
-	midl.AddTestAuthMiddleWare(server, cfg.Server.AdminUsername, cfg.Server.AdminPassword)
 
 	server.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusNotFound, "Not found")

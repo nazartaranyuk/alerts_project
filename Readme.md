@@ -7,6 +7,8 @@ server:
   port: // your port (int type)
   admin_username: // your admin username
   admin_password: // your admin password
+  jwt_secret: "some-jwt-secret"
+  
 
 client:
   api_base_url: "YOUR_API_BASE_URL"

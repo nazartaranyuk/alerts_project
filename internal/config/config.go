@@ -15,7 +15,8 @@ type ServerConfig struct {
 	Host          string `yaml:"host"`
 	Port          int    `yaml:"port"`
 	AdminPassword string `yaml:"admin_password"`
-	AdminUsername string `yaml:"admin_username"`
+	AdminEmail    string `yaml:"admin_email"`
+	JWTSecret     string `yaml:"jwt_secret"`
 }
 
 type ClientConfig struct {
