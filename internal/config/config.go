@@ -25,10 +25,17 @@ type ClientConfig struct {
 	TimeoutSec int    `yaml:"timeout_sec"`
 }
 
+type DatabaseConfig struct {
+	DbName   string `yaml:"db_name"`
+	AdminDSN string `yaml:"admin_dsn"`
+	AppDSN   string `yaml:"app_dsn"`
+}
+
 type Config struct {
-	Env    string       `yaml:"env"`
-	Server ServerConfig `yaml:"server"`
-	Client ClientConfig `yaml:"client"`
+	Env      string         `yaml:"env"`
+	Server   ServerConfig   `yaml:"server"`
+	Client   ClientConfig   `yaml:"client"`
+	Database DatabaseConfig `yaml:"database"`
 }
 
 func LoadConfig() *Config {
