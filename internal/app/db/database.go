@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/lib/pq"
-	_ "github.com/lib/pq"
 )
 
 type Database struct {
@@ -83,7 +82,7 @@ func NewDatabase(adminDSN, appDSN, dbName string) (*Database, error) {
 	}, nil
 }
 
-func dbOwnerFromDSN(dsn string) string {
+func dbOwnerFromDSN(_ string) string {
 	return "myuser"
 }
 
