@@ -30,15 +30,13 @@ func NewServer(cfg config.Config, s usecase.GetAlarmInfoService) (*Server, error
 	server.Use(middleware.Logger())
 
 	server.POST("/login", handler.LoginHandler(cfg))
+	server.POST("/send-from-telegram", handler.SendFromBotHandler())
 
 	midl.AddJWTMiddleware(server, []byte(cfg.Server.JWTSecret))
 
 	server.GET("/api/v1/health", handler.Health())
-
 	server.GET("/api/v1/alerts", handler.GetAlarms(s))
-
 	server.GET("/swagger", echoSwagger.WrapHandler)
-
 	server.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusNotFound, "Not found")
 	})
