@@ -28,8 +28,8 @@ func NewServer(cfg config.Config, alarmsService *usecase.GetAlarmInfoService, us
 	server := echo.New()
 	server.Use(middleware.Logger())
 
-	server.POST("/api/register", handler.RegistrationHandler(userService))
-	server.POST("/api/login", handler.LoginHandler(cfg, userService))
+	server.POST("/api/register", handler.RegistrationHandler(*userService))
+	server.POST("/api/login", handler.LoginHandler(cfg, *userService))
 	server.POST("/api/send-from-telegram", handler.SendFromBotHandler())
 
 	midl.AddJWTMiddleware(server, []byte(cfg.Server.JWTSecret))

@@ -28,7 +28,7 @@ import (
 // @Failure      401       {string}  string "Unauthorized"
 // @Failure      500       {string}  string "Internal Server Error"
 // @Router       /login [post]
-func LoginHandler(cfg config.Config, service *usecase.UserService) echo.HandlerFunc {
+func LoginHandler(cfg config.Config, service usecase.UserService) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var loginReq domain.LoginReq
 

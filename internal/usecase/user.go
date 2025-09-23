@@ -6,17 +6,22 @@ import (
 	"nazartaraniuk/alertsProject/internal/repository"
 )
 
-type UserService struct {
+type UserService interface {
+	LoginUser(req domain.LoginReq) (*domain.User, error)
+	RegisterUser(req domain.RegisterReq) (int64, error)
+}
+
+type UserServiceImpl struct {
 	repository *repository.UserRepository
 }
 
-func NewUserService(repo *repository.UserRepository) *UserService {
-	return &UserService{
+func NewUserService(repo *repository.UserRepository) UserService {
+	return &UserServiceImpl{
 		repository: repo,
 	}
 }
 
-func (s *UserService) LoginUser(req domain.LoginReq) (*domain.User, error) {
+func (s *UserServiceImpl) LoginUser(req domain.LoginReq) (*domain.User, error) {
 	user, err := s.repository.GetUserByEmail(req.Email)
 	if err != nil {
 		return nil, err
@@ -27,7 +32,7 @@ func (s *UserService) LoginUser(req domain.LoginReq) (*domain.User, error) {
 	return user, nil
 }
 
-func (s *UserService) RegisterUser(req domain.RegisterReq) (int64, error) {
+func (s *UserServiceImpl) RegisterUser(req domain.RegisterReq) (int64, error) {
 	id, err := s.repository.CreateUser(req)
 	if err != nil {
 		return id, err

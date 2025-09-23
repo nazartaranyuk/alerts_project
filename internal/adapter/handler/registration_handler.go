@@ -22,7 +22,7 @@ import (
 // @Failure      409          {string}  string  "Email already exists"
 // @Failure      500          {string}  string  "Internal Server Error"
 // @Router       /register [post]
-func RegistrationHandler(userService *usecase.UserService) echo.HandlerFunc {
+func RegistrationHandler(userService usecase.UserService) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var req domain.RegisterReq
 		if err := json.NewDecoder(c.Request().Body).Decode(&req); err != nil {
