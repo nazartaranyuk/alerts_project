@@ -48,7 +48,7 @@ func main() {
 		logrus.Println(err)
 	}
 
-	mainServer, err := server.NewServer(*cfg, alarmsInfoService, userService)
+	mainServer, err := server.NewServer(*cfg, alarmsInfoService, &userService)
 	if err != nil {
 		logrus.Println(err)
 	}
