@@ -3,11 +3,10 @@ package db
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"nazartaraniuk/alertsProject/internal/domain"
 	"time"
 
-	"github.com/lib/pq"
+	_ "github.com/lib/pq"
 )
 
 type Database struct {
@@ -30,15 +29,8 @@ func NewDatabase(adminDSN, appDSN, dbName string) (*Database, error) {
 	if err := admin.QueryRow(`SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname=$1)`, dbName).Scan(&exists); err != nil {
 		return nil, err
 	}
-	if !exists {
-		q := fmt.Sprintf(`CREATE DATABASE %s WITH OWNER %s TEMPLATE template0 ENCODING 'UTF8'`,
-			pq.QuoteIdentifier(dbName), pq.QuoteIdentifier(dbOwnerFromDSN(appDSN)))
-		if _, err := admin.Exec(q); err != nil {
-			return nil, err
-		}
-	}
 
-	app, err := sql.Open("postgres", appDSN) // appDSN: postgres://user:pass@host:5432/<dbName>?sslmode=disable
+	app, err := sql.Open("postgres", appDSN)
 	if err != nil {
 		return nil, err
 	}
@@ -51,39 +43,10 @@ func NewDatabase(adminDSN, appDSN, dbName string) (*Database, error) {
 	app.SetMaxIdleConns(5)
 	app.SetConnMaxLifetime(30 * time.Minute)
 
-	stmts := []string{
-		`CREATE TABLE IF NOT EXISTS regions (
-		  region_id        TEXT PRIMARY KEY,
-		  region_type      TEXT NOT NULL,
-		  region_name      TEXT NOT NULL,
-		  region_eng_name  TEXT NOT NULL,
-		  last_update      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-		)`,
-		`CREATE TABLE IF NOT EXISTS region_active_alarms (
-		  id           BIGSERIAL PRIMARY KEY,
-		  region_id    TEXT NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
-		  region_type  TEXT NOT NULL,
-		  type         TEXT NOT NULL,
-		  last_update  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		  UNIQUE (region_id, type)
-		)`,
-		`CREATE INDEX IF NOT EXISTS idx_region_active_alarms_region_id ON region_active_alarms(region_id)`,
-	}
-	for _, q := range stmts {
-		if _, err := app.Exec(q); err != nil {
-			_ = app.Close()
-			return nil, err
-		}
-	}
-
 	return &Database{
 		connectionString: appDSN,
 		DB:               app,
 	}, nil
-}
-
-func dbOwnerFromDSN(_ string) string {
-	return "myuser"
 }
 
 func (r *Database) SaveRegions(ctx context.Context, regions []domain.RegionAlarmInfo) error {

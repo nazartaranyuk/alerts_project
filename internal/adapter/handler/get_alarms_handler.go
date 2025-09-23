@@ -22,7 +22,7 @@ const (
 // @Success 200 {array} domain.RegionAlarmInfo
 // @Failure 500 {object} domain.Error
 // @Router /alerts [get]
-func GetAlarms(serv usecase.GetAlarmInfoService) echo.HandlerFunc {
+func GetAlarms(serv *usecase.GetAlarmInfoService) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		c.Request().Header.Set("Content-Type", "application/json; charset=utf-8")
 

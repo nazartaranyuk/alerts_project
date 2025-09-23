@@ -10,7 +10,7 @@ import (
 )
 
 func AddJWTMiddleware(server *echo.Echo, jwtSecret []byte) {
-	authorizedGroup := server.Group("/api")
+	authorizedGroup := server.Group("/api/v1")
 
 	authorizedGroup.Use(echojwt.WithConfig(echojwt.Config{
 		SigningKey:  jwtSecret,

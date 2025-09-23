@@ -4,21 +4,15 @@ import (
 	"context"
 	"nazartaraniuk/alertsProject/internal/app/db"
 	"nazartaraniuk/alertsProject/internal/domain"
-
-	"github.com/sirupsen/logrus"
 )
 
 type AlarmsRepositoryLocal struct {
-	Database db.Database
+	Database *db.Database
 }
 
-func NewAlarmsRepositoryLocal(adminDSN string, appDSN string, dbName string) *AlarmsRepositoryLocal {
-	database, err := db.NewDatabase(adminDSN, appDSN, dbName)
-	if err != nil {
-		logrus.Fatal(err)
-	}
+func NewAlarmsRepositoryLocal(db *db.Database) *AlarmsRepositoryLocal {
 	return &AlarmsRepositoryLocal{
-		Database: *database,
+		Database: db,
 	}
 }
 

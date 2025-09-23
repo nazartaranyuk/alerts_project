@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"nazartaraniuk/alertsProject/internal/app/client"
+	"nazartaraniuk/alertsProject/internal/app/db"
 	"nazartaraniuk/alertsProject/internal/app/server"
 	"nazartaraniuk/alertsProject/internal/config"
 	"nazartaraniuk/alertsProject/internal/repository"
@@ -28,22 +29,28 @@ func main() {
 		cfg.Client.APIKey,
 	)
 
-	alarmsRepositoryLocal := repository.NewAlarmsRepositoryLocal(
-		cfg.Database.AdminDSN, cfg.Database.AppDSN, cfg.Database.DbName,
-	)
+	database, err := db.NewDatabase(cfg.Database.AdminDSN, cfg.Database.AppDSN, cfg.Database.DbName)
+
+	alarmsRepositoryLocal := repository.NewAlarmsRepositoryLocal(database)
 	alarmsRepository := repository.NewAlarmsRepository(mainClient)
+	userRepository := repository.NewUserRepository(database)
 
 	alarmsInfoService := usecase.NewGetAlarmInfoService(*alarmsRepository)
 	saveAlarmsService := usecase.NewSaveAlarmsService(*alarmsRepository, *alarmsRepositoryLocal)
+	userService := usecase.NewUserService(userRepository)
 
-	err := updateDatabase(context.Background(), 2*time.Minute, *saveAlarmsService)
+	err = updateDatabase(context.Background(), 2*time.Minute, *saveAlarmsService)
 	if err != nil {
-		logrus.Fatal(err)
+		logrus.Println(err)
 	}
 
-	mainServer, err := server.NewServer(*cfg, *alarmsInfoService)
 	if err != nil {
-		logrus.Fatal(err)
+		logrus.Println(err)
+	}
+
+	mainServer, err := server.NewServer(*cfg, alarmsInfoService, userService)
+	if err != nil {
+		logrus.Println(err)
 	}
 
 	_ = mainServer.Run()

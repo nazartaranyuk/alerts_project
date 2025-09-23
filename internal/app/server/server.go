@@ -24,18 +24,18 @@ type Server struct {
 	server *echo.Echo
 }
 
-func NewServer(cfg config.Config, s usecase.GetAlarmInfoService) (*Server, error) {
+func NewServer(cfg config.Config, alarmsService *usecase.GetAlarmInfoService, userService *usecase.UserService) (*Server, error) {
 	server := echo.New()
-	server.Use(middleware.Recover())
 	server.Use(middleware.Logger())
 
-	server.POST("/login", handler.LoginHandler(cfg))
-	server.POST("/send-from-telegram", handler.SendFromBotHandler())
+	server.POST("/api/register", handler.RegistrationHandler(userService))
+	server.POST("/api/login", handler.LoginHandler(cfg, userService))
+	server.POST("/api/send-from-telegram", handler.SendFromBotHandler())
 
 	midl.AddJWTMiddleware(server, []byte(cfg.Server.JWTSecret))
 
 	server.GET("/api/v1/health", handler.Health())
-	server.GET("/api/v1/alerts", handler.GetAlarms(s))
+	server.GET("/api/v1/alerts", handler.GetAlarms(alarmsService))
 	server.GET("/swagger", echoSwagger.WrapHandler)
 	server.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusNotFound, "Not found")

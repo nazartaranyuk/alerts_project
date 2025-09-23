@@ -15,6 +15,7 @@ func (rep *AlarmsRepository) GetCurrentAlerts() ([]domain.RegionAlarmInfo, error
 	response, err := rep.client.GetCurrentAlerts()
 	if err != nil {
 		logrus.Printf("Service cannot get alarms info: %v", err)
+		return []domain.RegionAlarmInfo{}, err
 	}
 
 	return response, err

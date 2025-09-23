@@ -1,59 +1,66 @@
 package handler
 
 import (
+	"database/sql"
+	"encoding/json"
+	"errors"
 	"nazartaraniuk/alertsProject/internal/config"
+	"nazartaraniuk/alertsProject/internal/domain"
+	"nazartaraniuk/alertsProject/internal/usecase"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // LoginHandler godoc
-// @Summary Login
-// @Description authorise user with JWT token
-// @Tags alarms
-// @Produce json
-// @Success 200 {map} success
-// @Failure 500 {object} 505
-// @Router /alerts [get]
-func LoginHandler(cfg config.Config) echo.HandlerFunc {
+// @Summary      Login
+// @Description  Authorize user and return JWT token
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        loginReq  body      domain.LoginReq  true  "Login credentials"
+// @Success      200       {object}  domain.TokenResp
+// @Failure      400       {string}  string "Bad Request"
+// @Failure      401       {string}  string "Unauthorized"
+// @Failure      500       {string}  string "Internal Server Error"
+// @Router       /login [post]
+func LoginHandler(cfg config.Config, service *usecase.UserService) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		JWTSecret := []byte(cfg.Server.JWTSecret)
+		var loginReq domain.LoginReq
 
-		type Credentials struct {
-			Email    string `json:"email"`
-			Password string `json:"password"`
+		if err := json.NewDecoder(c.Request().Body).Decode(&loginReq); err != nil {
+			return c.NoContent(http.StatusBadRequest)
 		}
-
-		var creds Credentials
-		if err := c.Bind(&creds); err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "bad request"})
-		}
-
-		if creds.Email != cfg.Server.AdminEmail || creds.Password != cfg.Server.AdminPassword {
-			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "invalid credentials"})
-		}
-
-		claims := jwt.MapClaims{
-			"sub":   "user-1",
-			"email": creds.Email,
-			"role":  "user",
-			"exp":   time.Now().Add(24 * time.Hour).Unix(),
-			"iat":   time.Now().Unix(),
-		}
-
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-		signed, err := token.SignedString(JWTSecret)
+		u, err := service.LoginUser(loginReq)
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "cannot sign token"})
+			if errors.Is(err, sql.ErrNoRows) {
+				return c.String(http.StatusUnauthorized, "unauthorized")
+			}
+			return c.NoContent(http.StatusInternalServerError)
+		}
+		if err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(loginReq.Password)); err != nil {
+			return c.String(http.StatusUnauthorized, "invalid credentials")
 		}
 
-		return c.JSON(http.StatusOK, map[string]any{
-			"access_token": signed,
-			"token_type":   "Bearer",
-			"expires_in":   24 * 3600,
+		ttl := 15 * time.Minute
+		now := time.Now()
+		claims := jwt.RegisteredClaims{
+			Subject:   strconv.FormatInt(u.ID, 10),
+			IssuedAt:  jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(ttl)),
+		}
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+		signed, err := token.SignedString([]byte(cfg.Server.JWTSecret))
+		if err != nil {
+			return c.NoContent(http.StatusInternalServerError)
+		}
+		return c.JSON(http.StatusOK, domain.TokenResp{
+			AccessToken: signed,
+			ExpiresAt:   claims.ExpiresAt.Unix(),
 		})
 	}
 }

@@ -22,7 +22,7 @@ func NewClient(rawURL string, timeout time.Duration, apiKey string) *Client {
 		BaseURL: rawURL,
 		HTTP: &http.Client{
 			Timeout: timeout,
-			Transport: &trippers.AuthRoundTripper{
+			Transport: &trippers.ApiKeyRoundTripper{
 				APIKey: apiKey,
 				Next:   http.DefaultTransport,
 			},

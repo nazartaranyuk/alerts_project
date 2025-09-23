@@ -1,2 +1,8 @@
 configs/
 /docs/
+.idea/
+.vscode/
+*.iml
+*.log
+*.out
+*.exe
