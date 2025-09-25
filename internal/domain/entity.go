@@ -7,6 +7,10 @@ type Error struct {
 	Time    time.Time `json:"time,omitempty"`
 }
 
+type SuccessfulStatus struct {
+	Status string `json:"status"`
+}
+
 type Health struct {
 	Status string `json:"status"`
 	Time   string `json:"time"`

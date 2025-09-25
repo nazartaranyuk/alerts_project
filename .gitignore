@@ -1,7 +1,9 @@
 configs/
-/docs/
+docs/
 .idea/
 .vscode/
+bin/
+build/
 *.iml
 *.log
 *.out
