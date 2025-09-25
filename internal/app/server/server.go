@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/labstack/echo/v4"
 	echoSwagger "github.com/swaggo/echo-swagger"
@@ -26,19 +27,22 @@ type Server struct {
 
 func NewServer(cfg config.Config, alarmsService *usecase.GetAlarmInfoService, userService *usecase.UserService) (*Server, error) {
 	server := echo.New()
+	// Middlewares
 	server.Use(middleware.Logger())
+	midl.AddJWTMiddleware(server, []byte(cfg.Server.JWTSecret))
+	midl.AddPrometheusMiddleware(server)
 
+	// Routes
 	server.POST("/api/register", handler.RegistrationHandler(*userService))
 	server.POST("/api/login", handler.LoginHandler(cfg, *userService))
 	server.POST("/api/send-from-telegram", handler.SendFromBotHandler())
 
-	midl.AddJWTMiddleware(server, []byte(cfg.Server.JWTSecret))
-
 	server.GET("/api/v1/health", handler.Health())
 	server.GET("/api/v1/alerts", handler.GetAlarms(alarmsService))
-	server.GET("/swagger", echoSwagger.WrapHandler)
+	server.GET("/api/swagger", echoSwagger.WrapHandler)
+	server.GET("/api/metrics", echo.WrapHandler(promhttp.Handler()))
 	server.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusNotFound, "Not found")
+		return c.String(http.StatusNotFound, "Wrong endpoint. Please use /api")
 	})
 
 	return &Server{cfg: cfg, server: server}, nil
